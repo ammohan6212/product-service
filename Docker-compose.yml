@@ -14,7 +14,7 @@ services:
       - app-network
 
   go-backend:
-    image: go:1.0
+    image: product:1.0
     container_name: go-product-service
     ports:
       - "8080:8080"
