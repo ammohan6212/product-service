@@ -71,7 +71,7 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 }
 func getCategories(w http.ResponseWriter, r *http.Request) {
     var categories []models.Category
-    DB.Find(&categories)
+    dbConn.Find(&categories)
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(categories)
@@ -79,7 +79,7 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
     var products []models.Product
-    DB.Find(&products)
+    dbConn.Find(&products)
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(products)
