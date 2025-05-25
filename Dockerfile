@@ -2,10 +2,8 @@
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
-
 COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install
-
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
@@ -13,10 +11,8 @@ RUN cd frontend && npm run build
 FROM golang:1.21-alpine AS backend-builder
 
 WORKDIR /app
-
-COPY backend/main.go .
-
-RUN go mod init backend \
+COPY src/main.go .
+RUN go mod init src \
     && go get github.com/gin-gonic/gin \
     && go build -o server main.go
 
@@ -24,13 +20,10 @@ RUN go mod init backend \
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
-
 WORKDIR /app
 
 COPY --from=backend-builder /app/server .
-
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
 EXPOSE 8000
-
 CMD ["./server"]
