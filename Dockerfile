@@ -1,30 +1,36 @@
-# ---- Build Stage ----
+# Use official Go image as the build stage
 FROM golang:1.21-alpine AS builder
 
+# Set environment variables
 ENV CGO_ENABLED=0 \
     GOOS=linux \
     GO111MODULE=on
 
+# Set the working directory inside the container
 WORKDIR /go/src/go-postgres-app
 
+# Copy go mod and sum files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .              # Copies the source code AND data folder
+# Copy the rest of the application code
+COPY . .
+
+# Build the Go app binary
 RUN go mod tidy
 RUN go build -o main .
 
-# ---- Final Stage ----
+# ---- Final stage ----
 FROM alpine:latest
 
-WORKDIR /app
+# Set working directory in the final container
+WORKDIR /root/
 
-# Copy the compiled binary
+# Copy the built binary from the builder stage
 COPY --from=builder /go/src/go-postgres-app/main .
 
-# Copy the data directory
-COPY --from=builder /go/src/go-postgres-app/data ./data
-
+# Expose the port the app runs on
 EXPOSE 8080
 
+# Command to run the binary
 CMD ["./main"]
