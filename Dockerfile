@@ -17,6 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app binary
+RUN go mod tidy
 RUN go build -o main .
 
 # ---- Final stage ----
