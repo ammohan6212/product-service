@@ -15,7 +15,7 @@ RUN go mod download
 
 # Copy the rest of the application code
 COPY . .
-
+COPY data ./data 
 # Build the Go app binary
 RUN go mod tidy
 RUN go build -o main .
