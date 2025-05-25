@@ -14,9 +14,13 @@ func main() {
 	r.LoadHTMLFiles("./frontend/build/index.html")
 
 	// Serve frontend at root
+
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
+	r.GET("/ping", func(c *gin.Context) {
+    c.JSON(200, gin.H{"message": "pong"})
+	})	
 
 	// Simple API endpoint
 	r.GET("/api/products", func(c *gin.Context) {
