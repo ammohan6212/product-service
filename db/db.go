@@ -43,8 +43,8 @@ func Connect() {
 	log.Fatalf("❌ Failed to connect to PostgreSQL after %d retries: %v", maxRetries, err)
 }
 
-func getDBConfig() DBConfig {
-	return DBConfig{
+func getDBConfig() DB {
+	return DB{
 		Host:     getEnv("DB_HOST", "localhost"),
 		Port:     getEnv("DB_PORT", "5432"),
 		User:     getEnv("DB_USER", "postgres"),
