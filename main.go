@@ -7,8 +7,8 @@ import (
     "os"
     "strconv"
 
-    "yourapp/db"
-    "yourapp/models"
+    "go-backend/db"
+    "go-backend/models"
 )
 
 func loadCategories(filePath string, dbConn *db.DB) {
