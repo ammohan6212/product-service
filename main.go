@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,21 +12,21 @@ import (
 	"go-backend/db"
 	"go-backend/models"
 	"gorm.io/gorm"
-	"encoding/json"
-	
 )
+
+var DB *gorm.DB // Global database connection
 
 func loadCategories(filePath string, dbConn *gorm.DB) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("failed to open category.csv: %v", err)
+		log.Fatalf("❌ Failed to open category.csv: %v", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		log.Fatalf("failed to read category.csv: %v", err)
+		log.Fatalf("❌ Failed to read category.csv: %v", err)
 	}
 
 	for _, record := range records[1:] {
@@ -42,14 +43,14 @@ func loadCategories(filePath string, dbConn *gorm.DB) {
 func loadProducts(filePath string, dbConn *gorm.DB) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("failed to open product.csv: %v", err)
+		log.Fatalf("❌ Failed to open product.csv: %v", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		log.Fatalf("failed to read product.csv: %v", err)
+		log.Fatalf("❌ Failed to read product.csv: %v", err)
 	}
 
 	for _, record := range records[1:] {
@@ -69,33 +70,34 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 
 	fmt.Println("✅ Products loaded successfully")
 }
-func getCategories(w http.ResponseWriter, r *http.Request) {
-    var categories []models.Category
-    dbConn.Find(&categories)
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(categories)
+func getCategories(w http.ResponseWriter, r *http.Request) {
+	var categories []models.Category
+	DB.Find(&categories)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(categories)
 }
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
-    var products []models.Product
-    dbConn.Find(&products)
+	var products []models.Product
+	DB.Find(&products)
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(products)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(products)
 }
 
 func main() {
-	dbConn := db.Connect()
+	DB = db.Connect() // Assign global DB
 
-	// Auto migrate schema
-	dbConn.AutoMigrate(&models.Category{}, &models.Product{})
+	DB.AutoMigrate(&models.Category{}, &models.Product{})
 
-	loadCategories("data/category.csv", dbConn)
-	loadProducts("data/product.csv", dbConn)
+	loadCategories("data/category.csv", DB)
+	loadProducts("data/product.csv", DB)
+
 	http.HandleFunc("/api/categories", getCategories)
-    http.HandleFunc("/api/products", getProducts)
+	http.HandleFunc("/api/products", getProducts)
 
-    fmt.Println("🚀 Server started at :8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("🚀 Server started at :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
