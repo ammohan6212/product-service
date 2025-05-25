@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=builder /app/server .
 
 # Copy React build files
-COPY frontend/build ./frontend/build
+COPY frontend/ ./frontend/
 
 EXPOSE 8080
 
