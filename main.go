@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"product_service/db"
+	"/db"
 )
 
 func main() {
