@@ -1,37 +1,27 @@
-# -----------------------------
-# Stage 1: Builder
-# -----------------------------
-FROM golang:1.20-alpine AS builder
-
-# Install Git (required for some go modules)
-RUN apk add --no-cache git
+# Stage 1: Build Go backend
+FROM golang:1.21 AS builder
 
 WORKDIR /app
 
-# Copy go.mod and go.sum to download dependencies
-COPY go.mod go.sum ./
-RUN go mod download
+COPY backend/main.go .
 
-# Copy the source code into the image
-COPY src/ ./src/
+RUN go mod init backend && \
+    go get github.com/gin-gonic/gin && \
+    go build -o server .
 
-# Set working directory to the source folder and build the app
-WORKDIR /app/src
-RUN go build -o /app/product-service main.go
-
-# -----------------------------
-# Stage 2: Runtime
-# -----------------------------
+# Stage 2: Minimal image with frontend
 FROM alpine:latest
 
-# Create work directory
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /app
 
-# Copy the binary from the builder stage
-COPY --from=builder /app/product-service .
+# Copy Go binary
+COPY --from=builder /app/server .
 
-# Expose application port
+# Copy React build files
+COPY frontend/build ./frontend/build
+
 EXPOSE 8080
 
-# Run the application
-CMD ["./product-service"]
+CMD ["./server"]
