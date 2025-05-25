@@ -1,19 +1,17 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-// Global variable for database connection
-var DB *sql.DB
+var DB *gorm.DB
 
-// DBConfig holds PostgreSQL config values
 type DBConfig struct {
 	Host     string
 	Port     string
@@ -22,8 +20,8 @@ type DBConfig struct {
 	DBName   string
 }
 
-// Connect initializes and connects to PostgreSQL with retries
-func Connect() {
+// Connect to PostgreSQL using GORM
+func Connect() *gorm.DB {
 	config := getDBConfig()
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -34,19 +32,19 @@ func Connect() {
 	maxRetries := 10
 
 	for i := 0; i < maxRetries; i++ {
-		DB, err = sql.Open("postgres", dsn)
-		if err == nil && DB.Ping() == nil {
-			log.Println("✅ Connected to PostgreSQL database successfully")
-			return
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			log.Println("✅ Connected to PostgreSQL via GORM successfully")
+			return DB
 		}
-		log.Printf("⏳ Waiting for database connection (%d/%d)...", i+1, maxRetries)
+		log.Printf("⏳ Waiting for DB connection via GORM (%d/%d)...", i+1, maxRetries)
 		time.Sleep(2 * time.Second)
 	}
 
-	log.Fatalf("❌ Failed to connect to PostgreSQL after %d retries: %v", maxRetries, err)
+	log.Fatalf("❌ Failed to connect to PostgreSQL with GORM: %v", err)
+	return nil
 }
 
-// getDBConfig fetches DB config from environment or uses fallback
 func getDBConfig() DBConfig {
 	return DBConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
@@ -57,7 +55,6 @@ func getDBConfig() DBConfig {
 	}
 }
 
-// getEnv returns environment variable or fallback
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
