@@ -5,5 +5,6 @@ type Product struct {
     Name       string  `gorm:"not null"`
     Price      float64
     Stock      int
+    ImageURL   string  `gorm:"not null"`
     CategoryID uint
 }

@@ -1,0 +1,11 @@
+name,price,category_id,stock,image_url
+Smartphone,699.99,1,50,https://example.com/images/products/smartphone.jpg
+Laptop,1299.00,1,30,https://example.com/images/products/laptop.jpg
+Novel,14.99,2,100,https://example.com/images/products/novel.jpg
+Cookbook,25.50,2,60,https://example.com/images/products/cookbook.jpg
+T-Shirt,19.99,3,200,https://example.com/images/products/tshirt.jpg
+Jeans,49.99,3,150,https://example.com/images/products/jeans.jpg
+Microwave,89.99,4,40,https://example.com/images/products/microwave.jpg
+Refrigerator,499.00,4,10,https://example.com/images/products/refrigerator.jpg
+Action Figure,15.99,5,80,https://example.com/images/products/action_figure.jpg
+Puzzle,9.99,5,120,https://example.com/images/products/puzzle.jpg
