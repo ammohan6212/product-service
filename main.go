@@ -5,7 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"go-postgres-app/db"
+	"./db"
+"
 )
 
 func main() {
