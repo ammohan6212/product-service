@@ -4,12 +4,15 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
 	"go-backend/db"
 	"go-backend/models"
 	"gorm.io/gorm"
+	"encoding/json"
+	
 )
 
 func loadCategories(filePath string, dbConn *gorm.DB) {
@@ -66,6 +69,21 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 
 	fmt.Println("✅ Products loaded successfully")
 }
+func getCategories(w http.ResponseWriter, r *http.Request) {
+    var categories []models.Category
+    DB.Find(&categories)
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(categories)
+}
+
+func getProducts(w http.ResponseWriter, r *http.Request) {
+    var products []models.Product
+    DB.Find(&products)
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(products)
+}
 
 func main() {
 	dbConn := db.Connect()
@@ -75,4 +93,9 @@ func main() {
 
 	loadCategories("data/category.csv", dbConn)
 	loadProducts("data/product.csv", dbConn)
+	http.HandleFunc("/api/categories", getCategories)
+    http.HandleFunc("/api/products", getProducts)
+
+    fmt.Println("🚀 Server started at :8080")
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
