@@ -1,35 +1,38 @@
-# === Frontend Builder ===
-FROM node:20-alpine AS frontend-builder
+# Use the official Golang image as the build stage
+FROM golang:1.21-alpine AS builder
 
+# Set environment variables
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+# Install necessary dependencies
+RUN apk update && apk add --no-cache git
+
+# Set working directory inside container
 WORKDIR /app
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
 
-COPY frontend/ ./frontend
-RUN cd frontend && npm run build
+# Copy go mod files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
 
-# === Backend Builder ===
-FROM golang:1.21-alpine AS backend-builder
+# Copy the rest of the app
+COPY . .
 
-WORKDIR /app
-COPY src/main.go .
-RUN go mod init src && \
-    go get github.com/gin-gonic/gin && \
-    go build -o server .
+# Build the Go app binary
+RUN go build -o main .
 
-# === Final Stage ===
+# Final stage: create a minimal image
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
-WORKDIR /app
+# Set working directory
+WORKDIR /root/
 
-# Copy Go binary
-COPY --from=backend-builder /app/server .
+# Copy binary from builder
+COPY --from=builder /app/main .
 
-# Copy React build output
-COPY --from=frontend-builder /app/frontend/build ./frontend
-
-# Serve React and API using Gin
+# Expose the application port
 EXPOSE 8080
 
-CMD ["./server"]
+# Run the application
+CMD ["./main"]
