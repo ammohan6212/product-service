@@ -1,11 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"yourapp/db"
+	"net/http"
+
+	"go-postgres-app/db"
 )
 
 func main() {
 	db.Connect()
-	log.Println("🚀 App is running...")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "✅ Go + Postgres app is running!")
+	})
+
+	log.Println("🚀 Server listening on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
