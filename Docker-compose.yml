@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     image: user:1.0
@@ -19,7 +17,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - backend
+      - db  # Optional, only if go service uses DB
     networks:
       - app-network
 
