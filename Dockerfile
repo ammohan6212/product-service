@@ -30,6 +30,6 @@ COPY --from=backend-builder /app/server .
 COPY --from=frontend-builder /app/frontend/build ./frontend
 
 # Serve React and API using Gin
-EXPOSE 8000
+EXPOSE 8080
 
 CMD ["./server"]
