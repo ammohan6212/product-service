@@ -10,8 +10,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Global variable for database connection
 var DB *sql.DB
 
+// DBConfig holds PostgreSQL config values
 type DBConfig struct {
 	Host     string
 	Port     string
@@ -20,6 +22,7 @@ type DBConfig struct {
 	DBName   string
 }
 
+// Connect initializes and connects to PostgreSQL with retries
 func Connect() {
 	config := getDBConfig()
 	dsn := fmt.Sprintf(
@@ -43,8 +46,9 @@ func Connect() {
 	log.Fatalf("❌ Failed to connect to PostgreSQL after %d retries: %v", maxRetries, err)
 }
 
-func getDBConfig() DB {
-	return DB{
+// getDBConfig fetches DB config from environment or uses fallback
+func getDBConfig() DBConfig {
+	return DBConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
 		Port:     getEnv("DB_PORT", "5432"),
 		User:     getEnv("DB_USER", "postgres"),
@@ -53,6 +57,7 @@ func getDBConfig() DB {
 	}
 }
 
+// getEnv returns environment variable or fallback
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
