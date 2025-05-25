@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"/db"
+	"gyyourapp/db"
 )
 
 func main() {
