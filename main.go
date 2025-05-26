@@ -97,9 +97,11 @@ func main() {
 	DB = db.Connect()
 
 	DB.AutoMigrate(&models.Category{}, &models.Product{})
-	
+
 	DB.Exec("DELETE FROM products")
 	DB.Exec("DELETE FROM categories")
+	DB.Exec("ALTER SEQUENCE categories_id_seq RESTART WITH 1") // optional: reset auto-increment
+	DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")   // optional: reset auto-increment
 	
 
 	loadCategories("data/category.csv", DB)
