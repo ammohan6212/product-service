@@ -7,5 +7,5 @@ type Product struct {
 	Stock      int      `json:"stock"`
 	ImageURL   string   `gorm:"not null" json:"image_url"`
 	CategoryID uint     `json:"category_id"`
-	Category   Category `json:"category,omitempty"`
+	Category   Category `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"category,omitempty"`
 }
