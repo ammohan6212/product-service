@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var DB *gorm.DB // Global database connection
 
 func loadCategories(filePath string, dbConn *gorm.DB) {
 	file, err := os.Open(filePath)
@@ -29,13 +29,10 @@ func loadCategories(filePath string, dbConn *gorm.DB) {
 		log.Fatalf("❌ Failed to read category.csv: %v", err)
 	}
 
-	for i, record := range records {
-		if i == 0 {
-			continue // skip header
-		}
+	for _, record := range records[1:] {
 		category := models.Category{
-			Name:     record[1],
-			ImageURL: record[2],
+			Name:     record[0],
+			ImageURL: record[1],
 		}
 		dbConn.Create(&category)
 	}
@@ -56,20 +53,17 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 		log.Fatalf("❌ Failed to read product.csv: %v", err)
 	}
 
-	for i, record := range records {
-		if i == 0 {
-			continue // skip header
-		}
-		price, _ := strconv.ParseFloat(record[2], 64)
+	for _, record := range records[1:] {
+		price, _ := strconv.ParseFloat(record[1], 64)
+		categoryID, _ := strconv.Atoi(record[2])
 		stock, _ := strconv.Atoi(record[3])
-		categoryID, _ := strconv.Atoi(record[5])
 
 		product := models.Product{
-			Name:       record[1],
+			Name:       record[0],
 			Price:      price,
+			CategoryID: uint(categoryID),
 			Stock:      stock,
 			ImageURL:   record[4],
-			CategoryID: uint(categoryID),
 		}
 		dbConn.Create(&product)
 	}
@@ -87,22 +81,16 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
 	var products []models.Product
-	DB.Preload("Category").Find(&products)
+	DB.Find(&products)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(products)
 }
 
 func main() {
-	DB = db.Connect()
+	DB = db.Connect() // Assign global DB
 
 	DB.AutoMigrate(&models.Category{}, &models.Product{})
-
-	// DB.Exec("DELETE FROM products")
-	// DB.Exec("DELETE FROM categories")
-	// DB.Exec("ALTER SEQUENCE categories_id_seq RESTART WITH 1") // optional: reset auto-increment
-	// DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")   // optional: reset auto-increment
-	
 
 	loadCategories("data/category.csv", DB)
 	loadProducts("data/product.csv", DB)
