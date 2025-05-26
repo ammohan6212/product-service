@@ -1,11 +1,11 @@
-name,price,category_id,stock,image_url
-Smartphone,699.99,1,50,https://example.com/images/products/smartphone.jpg
-Laptop,1299.00,1,30,https://example.com/images/products/laptop.jpg
-Novel,14.99,2,100,https://example.com/images/products/novel.jpg
-Cookbook,25.50,2,60,https://example.com/images/products/cookbook.jpg
-T-Shirt,19.99,3,200,https://example.com/images/products/tshirt.jpg
-Jeans,49.99,3,150,https://example.com/images/products/jeans.jpg
-Microwave,89.99,4,40,https://example.com/images/products/microwave.jpg
-Refrigerator,499.00,4,10,https://example.com/images/products/refrigerator.jpg
-Action Figure,15.99,5,80,https://example.com/images/products/action_figure.jpg
-Puzzle,9.99,5,120,https://example.com/images/products/puzzle.jpg
+ID,Name,Price,Stock,ImageURL,CategoryID
+1,Smartphone,699.99,50,https://example.com/images/products/smartphone.jpg,1
+2,Laptop,1299,30,https://example.com/images/products/laptop.jpg,1
+3,Novel,14.99,100,https://example.com/images/products/novel.jpg,2
+4,Cookbook,25.5,60,https://example.com/images/products/cookbook.jpg,2
+5,T-Shirt,19.99,200,https://example.com/images/products/tshirt.jpg,3
+6,Jeans,49.99,150,https://example.com/images/products/jeans.jpg,3
+7,Microwave,89.99,40,https://example.com/images/products/microwave.jpg,4
+8,Refrigerator,499,10,https://example.com/images/products/refrigerator.jpg,4
+9,Action Figure,15.99,80,https://example.com/images/products/action_figure.jpg,5
+10,Puzzle,9.99,120,https://example.com/images/products/puzzle.jpg,5
