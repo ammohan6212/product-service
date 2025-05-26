@@ -54,22 +54,23 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 	}
 
 	for _, record := range records[1:] {
-		price, _ := strconv.ParseFloat(record[1], 64)
-		categoryID, _ := strconv.Atoi(record[2])
+		price, _ := strconv.ParseFloat(record[2], 64)
 		stock, _ := strconv.Atoi(record[3])
+		categoryID, _ := strconv.Atoi(record[5])
 
 		product := models.Product{
-			Name:       record[0],
+			Name:       record[1],
 			Price:      price,
-			CategoryID: uint(categoryID),
 			Stock:      stock,
 			ImageURL:   record[4],
+			CategoryID: uint(categoryID),
 		}
 		dbConn.Create(&product)
 	}
 
 	fmt.Println("✅ Products loaded successfully")
 }
+
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
