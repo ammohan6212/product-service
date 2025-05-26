@@ -107,8 +107,8 @@ func main() {
 	loadCategories("data/category.csv", DB)
 	loadProducts("data/product.csv", DB)
 
-	http.HandleFunc("/categories", getCategories)
-	http.HandleFunc("/products", getProducts)
+	http.HandleFunc("/back/categories", getCategories)
+	http.HandleFunc("/back/products", getProducts)
 
 	fmt.Println("🚀 Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
