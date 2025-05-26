@@ -20,7 +20,6 @@ type DBConfig struct {
 	DBName   string
 }
 
-// Connect to PostgreSQL using GORM
 func Connect() *gorm.DB {
 	config := getDBConfig()
 	dsn := fmt.Sprintf(

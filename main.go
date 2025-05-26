@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB // Global database connection
+var DB *gorm.DB
 
 func loadCategories(filePath string, dbConn *gorm.DB) {
 	file, err := os.Open(filePath)
@@ -29,10 +29,13 @@ func loadCategories(filePath string, dbConn *gorm.DB) {
 		log.Fatalf("❌ Failed to read category.csv: %v", err)
 	}
 
-	for _, record := range records[1:] {
+	for i, record := range records {
+		if i == 0 {
+			continue // skip header
+		}
 		category := models.Category{
-			Name:     record[0],
-			ImageURL: record[1],
+			Name:     record[1],
+			ImageURL: record[2],
 		}
 		dbConn.Create(&category)
 	}
@@ -53,17 +56,20 @@ func loadProducts(filePath string, dbConn *gorm.DB) {
 		log.Fatalf("❌ Failed to read product.csv: %v", err)
 	}
 
-	for _, record := range records[1:] {
-		price, _ := strconv.ParseFloat(record[1], 64)
-		categoryID, _ := strconv.Atoi(record[2])
+	for i, record := range records {
+		if i == 0 {
+			continue // skip header
+		}
+		price, _ := strconv.ParseFloat(record[2], 64)
 		stock, _ := strconv.Atoi(record[3])
+		categoryID, _ := strconv.Atoi(record[5])
 
 		product := models.Product{
-			Name:       record[0],
+			Name:       record[1],
 			Price:      price,
-			CategoryID: uint(categoryID),
 			Stock:      stock,
 			ImageURL:   record[4],
+			CategoryID: uint(categoryID),
 		}
 		dbConn.Create(&product)
 	}
@@ -81,14 +87,14 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
 	var products []models.Product
-	DB.Find(&products)
+	DB.Preload("Category").Find(&products)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(products)
 }
 
 func main() {
-	DB = db.Connect() // Assign global DB
+	DB = db.Connect()
 
 	DB.AutoMigrate(&models.Category{}, &models.Product{})
 
