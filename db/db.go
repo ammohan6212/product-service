@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -21,7 +20,14 @@ type DBConfig struct {
 }
 
 func Connect() *gorm.DB {
-	config := getDBConfig()
+	config := DBConfig{
+		Host:     "localhost",
+		Port:     "5432",
+		User:     "postgres",
+		Password: "yourpassword",
+		DBName:   "mydatabase",
+	}
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.DBName,
@@ -42,21 +48,4 @@ func Connect() *gorm.DB {
 
 	log.Fatalf("❌ Failed to connect to PostgreSQL with GORM: %v", err)
 	return nil
-}
-
-func getDBConfig() DBConfig {
-	return DBConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "yourpassword"),
-		DBName:   getEnv("DB_NAME", "mydatabase"),
-	}
-}
-
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }
