@@ -98,8 +98,9 @@ func main() {
 
 	DB.AutoMigrate(&models.Category{}, &models.Product{})
 	
-	DB.Exec("DELETE FROM categories")
 	DB.Exec("DELETE FROM products")
+	DB.Exec("DELETE FROM categories")
+	
 
 	loadCategories("data/category.csv", DB)
 	loadProducts("data/product.csv", DB)
