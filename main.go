@@ -45,7 +45,7 @@ func main() {
 	r.POST("/products", handlers.UploadProduct)
 
 	// Start server
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":8082"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
