@@ -1,37 +1,45 @@
-# Use official Go image as the build stage
+# -------- Stage 1: Build Go Binary --------
 FROM golang:1.21-alpine AS builder
 
-# Set environment variables
+# Build environment setup
 ENV CGO_ENABLED=0 \
     GOOS=linux \
     GO111MODULE=on
 
-# Set the working directory inside the container
-WORKDIR /go/src/go-postgres-app
+WORKDIR /go/src/go-app
 
-# Copy go mod and sum files and download dependencies
+# Copy Go module files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the application code
+# Copy the entire app source code
 COPY . .
 
-# Build the Go app binary
+# Tidy and build the Go binary
 RUN go mod tidy
 RUN go build -o main .
 
-# ---- Final stage ----
+# -------- Stage 2: Final Slim Container --------
 FROM alpine:latest
 
-# Set working directory in the final container
-WORKDIR /root/
+# Add CA certificates (needed for HTTPS in Alpine)
+RUN apk --no-cache add ca-certificates
 
-# Copy the built binary from the builder stage
-COPY --from=builder /go/src/go-postgres-app/main .
+# Set working directory
+WORKDIR /app
 
-COPY --from=builder /go/src/go-postgres-app/data ./data
-# Expose the port the app runs on
+# Copy built binary from builder stage
+COPY --from=builder /go/src/go-app/main .
+
+# Copy any other runtime files (if needed)
+COPY --from=builder /go/src/go-app/data ./data
+
+# Expose app port
 EXPOSE 8080
 
-# Command to run the binary
+# Set the expected path for Google credentials
+# The actual file will be mounted at runtime
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
+
+# CMD to run the Go app
 CMD ["./main"]
