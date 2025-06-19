@@ -8,11 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"time"
 )
 
 const (
