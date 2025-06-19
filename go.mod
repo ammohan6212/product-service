@@ -1,4 +1,4 @@
-module go-backend
+module gin-gcs-backend
 
 go 1.21
 
