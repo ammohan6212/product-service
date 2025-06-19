@@ -6,6 +6,7 @@ import (
 	"gin-gcs-backend/models"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 )
 
 func main() {
@@ -31,6 +32,13 @@ func main() {
 			return
 		}
 		c.Next()
+	})
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"message": "Product service is running",
+		})
 	})
 
 	// Route
