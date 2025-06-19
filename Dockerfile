@@ -30,15 +30,14 @@ WORKDIR /app
 
 # Copy binary from builder stage
 COPY --from=builder /go/src/go-app/main .
-
-# Optional: Copy GCS service account JSON if needed at build time
-# COPY credentials/service-account.json ./credentials/service-account.json
-
-# Define required environment variable for GCS authentication
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
-
 # Ensure credentials directory exists (even if credentials are mounted later)
 RUN mkdir -p /app/credentials
+
+COPY service-account.json /app/credentials/service-account.json
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
+
+
 
 # Expose the application port
 EXPOSE 8080
