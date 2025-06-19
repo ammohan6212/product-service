@@ -27,11 +27,14 @@ RUN apk --no-cache add ca-certificates
 
 # Set working directory
 WORKDIR /app
+
+# Copy the Go binary from builder stage
+COPY --from=builder /go/src/go-app/main .
+
 # Expose app port
 EXPOSE 8080
 
 # Set the expected path for Google credentials
-# The actual file will be mounted at runtime
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
 # CMD to run the Go app
