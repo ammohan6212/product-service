@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
+	"log"
 )
 
 var (
@@ -19,11 +20,15 @@ func ConnectGCS() error {
 	if err != nil {
 		return fmt.Errorf("failed to create GCS client: %v", err)
 	}
+
+	// ✅ Log success
+	log.Printf("✅ Connected to Google Cloud Storage bucket: %s\n", BucketName)
 	return nil
 }
 
 func CloseGCS() {
 	if Client != nil {
 		Client.Close()
+		log.Println("🛑 GCS client connection closed.")
 	}
 }
