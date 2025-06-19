@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"cloud.google.com/go/storage"
-	"context"
 	"fmt"
+	"gin-gcs-backend/gcsclient"
 	"gin-gcs-backend/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,13 +10,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"cloud.google.com/go/storage"
 )
 
-const (
-	bucketName     = "ecommerce-details"
-	uploadFolder   = "product-images/"
-	publicBaseURL  = "https://storage.googleapis.com/" + bucketName + "/"
-)
+const uploadFolder = "product-images/"
 
 func UploadProduct(c *gin.Context) {
 	sellerName := c.PostForm("sellerName")
@@ -33,7 +29,7 @@ func UploadProduct(c *gin.Context) {
 	}
 	defer file.Close()
 
-	imageURL, err := uploadToGCS(c, file, header)
+	imageURL, err := uploadToGCS(file, header)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Image upload failed"})
 		return
@@ -43,6 +39,7 @@ func UploadProduct(c *gin.Context) {
         INSERT INTO products 
         (seller_name, name, description, price, category, image_path)
         VALUES (?, ?, ?, ?, ?, ?)`,
+
 		sellerName, name, description, price, category, imageURL,
 	)
 	if err != nil {
@@ -56,21 +53,14 @@ func UploadProduct(c *gin.Context) {
 	})
 }
 
-func uploadToGCS(c *gin.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to create GCS client: %v", err)
-	}
-	defer client.Close()
-
+func uploadToGCS(file multipart.File, header *multipart.FileHeader) (string, error) {
 	ext := filepath.Ext(header.Filename)
 	uniqueID := uuid.New().String()
 	objectName := uploadFolder + uniqueID + ext
 
-	wc := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
+	wc := gcsclient.Client.Bucket(gcsclient.BucketName).Object(objectName).NewWriter(gcsclient.Ctx)
 	wc.ContentType = header.Header.Get("Content-Type")
-	wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}} // make public
+	wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
 
 	if _, err := io.Copy(wc, file); err != nil {
 		return "", fmt.Errorf("failed to write to bucket: %v", err)
@@ -79,7 +69,6 @@ func uploadToGCS(c *gin.Context, file multipart.File, header *multipart.FileHead
 		return "", fmt.Errorf("failed to close bucket writer: %v", err)
 	}
 
-	// Public URL
-	imageURL := publicBaseURL + objectName
+	imageURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", gcsclient.BucketName, objectName)
 	return imageURL, nil
 }

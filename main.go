@@ -1,15 +1,27 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"gin-gcs-backend/models"
+	"gin-gcs-backend/gcsclient"
 	"gin-gcs-backend/handlers"
+	"gin-gcs-backend/models"
+	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func main() {
+	// Initialize MySQL
+	models.ConnectDatabase()
+
+	// Initialize Google Cloud Storage
+	err := gcsclient.ConnectGCS()
+	if err != nil {
+		log.Fatal("Failed to connect to Google Cloud Storage:", err)
+	}
+	defer gcsclient.CloseGCS()
+
 	r := gin.Default()
 
-	// CORS
+	// CORS middleware
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -21,9 +33,11 @@ func main() {
 		c.Next()
 	})
 
-	models.ConnectDatabase()
-
+	// Route
 	r.POST("/products", handlers.UploadProduct)
 
-	r.Run(":8080")
+	// Start server
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("Failed to start server:", err)
+	}
 }
