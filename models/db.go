@@ -40,9 +40,11 @@ func ConnectDatabase() {
 		description TEXT,
 		price DECIMAL(10,2),
 		category VARCHAR(255),
+		quantity INT,
 		image_path TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
+
 
 	_, err = DB.Exec(createTable)
 	if err != nil {

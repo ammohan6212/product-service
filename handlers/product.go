@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"cloud.google.com/go/storage"
 )
 
@@ -31,9 +32,17 @@ func UploadProduct(c *gin.Context) {
 	description := strings.TrimSpace(c.PostForm("description"))
 	price := strings.TrimSpace(c.PostForm("price"))
 	category := strings.TrimSpace(c.PostForm("category"))
+	quantityStr := strings.TrimSpace(c.PostForm("quantity"))
 
-	if sellerName == "" || name == "" || price == "" || category == "" {
+	if sellerName == "" || name == "" || price == "" || category == "" || quantityStr == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields are missing"})
+		return
+	}
+
+	// ✅ Convert quantity to int
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil || quantity < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Quantity must be a positive integer"})
 		return
 	}
 
@@ -57,9 +66,9 @@ func UploadProduct(c *gin.Context) {
 	// ✅ Save product to database
 	_, err = models.DB.Exec(`
 		INSERT INTO products 
-		(seller_name, name, description, price, category, image_path)
-		VALUES (?, ?, ?, ?, ?, ?)`,
-		sellerName, name, description, price, category, imageURL,
+		(seller_name, name, description, price, category, quantity, image_path)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		sellerName, name, description, price, category, quantity, imageURL,
 	)
 	if err != nil {
 		log.Println("Database insert error:", err)
@@ -73,6 +82,7 @@ func UploadProduct(c *gin.Context) {
 		"image_url": imageURL,
 	})
 }
+
 
 // uploadToGCS uploads the file to the GCS bucket and returns the public URL
 func uploadToGCS(file multipart.File, header *multipart.FileHeader) (string, error) {
