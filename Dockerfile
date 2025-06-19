@@ -27,13 +27,6 @@ RUN apk --no-cache add ca-certificates
 
 # Set working directory
 WORKDIR /app
-
-# Copy built binary from builder stage
-COPY --from=builder /go/src/go-app/main .
-
-# Copy any other runtime files (if needed)
-COPY --from=builder /go/src/go-app/data ./data
-
 # Expose app port
 EXPOSE 8080
 
