@@ -2,8 +2,8 @@ package models
 
 import (
 	"database/sql"
-	"log"
 	"fmt"
+	"log"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -18,10 +18,9 @@ func ConnectDatabase() {
 	pass := os.Getenv("DB_PASSWORD")
 	name := os.Getenv("DB_NAME")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, name
-)
-	var err error
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, name)
 
+	var err error
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal("DB connection failed:", err)
@@ -33,7 +32,6 @@ func ConnectDatabase() {
 
 	log.Println("Connected to MySQL!")
 
-	// Auto-create table if not exists
 	createTable := `
 	CREATE TABLE IF NOT EXISTS products (
 		id INT AUTO_INCREMENT PRIMARY KEY,
