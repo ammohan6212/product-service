@@ -106,3 +106,53 @@ func uploadToGCS(file multipart.File, header *multipart.FileHeader) (string, err
 	imageURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", gcsclient.BucketName, objectName)
 	return imageURL, nil
 }
+
+
+// GetAllProducts returns all products from the database
+func GetAllProducts(c *gin.Context) {
+	rows, err := models.DB.Query("SELECT id, seller_name, name, description, price, category, quantity, image_path FROM products")
+	if err != nil {
+		log.Println("Database fetch error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
+		return
+	}
+	defer rows.Close()
+
+	var products []map[string]interface{}
+
+	for rows.Next() {
+		var (
+			id          int
+			sellerName  string
+			name        string
+			description string
+			price       string
+			category    string
+			quantity    int
+			imagePath   string
+		)
+
+		err = rows.Scan(&id, &sellerName, &name, &description, &price, &category, &quantity, &imagePath)
+		if err != nil {
+			log.Println("Row scan error:", err)
+			continue
+		}
+
+		product := map[string]interface{}{
+			"id":           id,
+			"seller_name":  sellerName,
+			"name":         name,
+			"description":  description,
+			"price":        price,
+			"category":     category,
+			"quantity":     quantity,
+			"image_url":    imagePath,
+		}
+		products = append(products, product)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": products,
+	})
+}
+
