@@ -199,3 +199,43 @@ func GetProductByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"product": product})
 }
 
+
+
+func GetProductsBySeller(c *gin.Context) {
+	seller := c.Query("seller")
+
+	rows, err := models.DB.Query(`
+		SELECT id, name, price, quantity, category, image_path
+		FROM products
+		WHERE seller_name = ?`, seller)
+	if err != nil {
+		log.Println("DB query error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	defer rows.Close()
+
+	products := []map[string]interface{}{}
+	for rows.Next() {
+		var id int
+		var name, price, category, image string
+		var quantity int
+
+		err := rows.Scan(&id, &name, &price, &quantity, &category, &image)
+		if err != nil {
+			log.Println("Scan error:", err)
+			continue
+		}
+
+		products = append(products, map[string]interface{}{
+			"id":        id,
+			"name":      name,
+			"price":     price,
+			"quantity":  quantity,
+			"category":  category,
+			"image_url": image,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"products": products})
+}

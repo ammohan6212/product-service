@@ -45,7 +45,7 @@ func main() {
 	r.POST("/products", handlers.UploadProduct)
 	r.GET("/get-products", handlers.GetAllProducts)
 	r.GET("/get-product-details/:id", handlers.GetProductByID)
-
+	r.GET("/seller-products", handlers.GetProductsBySeller)
 	// Start server
 	if err := r.Run(":8082"); err != nil {
 		log.Fatal("Failed to start server:", err)
