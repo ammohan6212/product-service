@@ -44,6 +44,7 @@ func main() {
 	// Route
 	r.POST("/products", handlers.UploadProduct)
 	r.GET("/get-products", handlers.GetAllProducts)
+	r.GET("/get-product-details/:id", handlers.GetProductByID)
 
 	// Start server
 	if err := r.Run(":8082"); err != nil {

@@ -156,3 +156,46 @@ func GetAllProducts(c *gin.Context) {
 	})
 }
 
+
+
+// GetProductByID returns a single product by its ID
+func GetProductByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var (
+		productID    int
+		sellerName   string
+		name         string
+		description  string
+		price        string
+		category     string
+		quantity     int
+		imagePath    string
+	)
+
+	err := models.DB.QueryRow(`
+		SELECT id, seller_name, name, description, price, category, quantity, image_path
+		FROM products
+		WHERE id = ?`, id,
+	).Scan(&productID, &sellerName, &name, &description, &price, &category, &quantity, &imagePath)
+
+	if err != nil {
+		log.Println("Product fetch error:", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	product := map[string]interface{}{
+		"id":           productID,
+		"seller_name":  sellerName,
+		"name":         name,
+		"description":  description,
+		"price":        price,
+		"category":     category,
+		"quantity":     quantity,
+		"image_url":    imagePath,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"product": product})
+}
+
