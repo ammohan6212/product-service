@@ -240,64 +240,45 @@ func GetProductsBySeller(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"products": products})
 }
 // UpdateProductQuantity reduces the quantity of a product after a successful purchase
+// UpdateProductQuantity reduces the quantity of a product after a purchase
 func UpdateProductQuantity(c *gin.Context) {
 	id := c.Param("id")
-	log.Printf("🔍 Update request for product ID: %s", id)
 
-	var req struct {
+	// Parse request body for quantityPurchased
+	var reqBody struct {
 		QuantityPurchased int `json:"quantityPurchased"`
 	}
 
-	// Parse JSON
-	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("❌ JSON bind error: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	if err := c.ShouldBindJSON(&reqBody); err != nil || reqBody.QuantityPurchased <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quantityPurchased"})
 		return
 	}
 
-	if req.QuantityPurchased <= 0 {
-		log.Printf("❌ Invalid quantity: %d", req.QuantityPurchased)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Quantity must be positive"})
-		return
-	}
-
-	// Debug logging
-	log.Printf("📦 Reducing quantity of product %s by %d", id, req.QuantityPurchased)
-
-	// Check if product exists and get current quantity
-	var currentQty int
-	err := models.DB.QueryRow("SELECT quantity FROM products WHERE id = ?", id).Scan(&currentQty)
+	// Get current quantity
+	var currentQuantity int
+	err := models.DB.QueryRow("SELECT quantity FROM products WHERE id = ?", id).Scan(&currentQuantity)
 	if err != nil {
-		log.Printf("❌ Product not found or DB error: %v", err)
+		log.Println("Failed to get product quantity:", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	if currentQty < req.QuantityPurchased {
-		log.Printf("❌ Not enough stock: Available=%d, Requested=%d", currentQty, req.QuantityPurchased)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock"})
+	if currentQuantity < reqBody.QuantityPurchased {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock available"})
 		return
 	}
 
-	// Perform the update
-	res, err := models.DB.Exec(`
-		UPDATE products 
-		SET quantity = quantity - ? 
-		WHERE id = ?`, req.QuantityPurchased, id)
-
+	// Update quantity
+	newQuantity := currentQuantity - reqBody.QuantityPurchased
+	_, err = models.DB.Exec("UPDATE products SET quantity = ? WHERE id = ?", newQuantity, id)
 	if err != nil {
-		log.Printf("❌ DB update error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update quantity"})
+		log.Println("Failed to update quantity:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product quantity"})
 		return
 	}
 
-	rowsAffected, _ := res.RowsAffected()
-	log.Printf("✅ Rows affected: %d", rowsAffected)
-
-	if rowsAffected == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No update performed"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Quantity updated successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "✅ Product quantity updated",
+		"new_quantity": newQuantity,
+	})
 }
