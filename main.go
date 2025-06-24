@@ -47,6 +47,9 @@ func main() {
 	r.GET("/get-product-details/:id", handlers.GetProductByID)
 	r.GET("/seller-products", handlers.GetProductsBySeller)
 	r.PATCH("/update-quantity/:id", handlers.UpdateProductQuantity)
+	r.PUT("/update/:id", handlers.UpdateProduct)
+	r.DELETE("/delete/:id", handlers.DeleteProduct)
+
 	// Start server
 	if err := r.Run(":8082"); err != nil {
 		log.Fatal("Failed to start server:", err)

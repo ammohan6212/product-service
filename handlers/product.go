@@ -282,3 +282,52 @@ func UpdateProductQuantity(c *gin.Context) {
 		"new_quantity": newQuantity,
 	})
 }
+
+func UpdateProduct(c *gin.Context) {
+	id := c.Param("id")
+
+	var reqBody struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Price       string `json:"price"`
+		Category    string `json:"category"`
+		Quantity    int    `json:"quantity"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	_, err := models.DB.Exec(`
+		UPDATE products
+		SET name = ?, description = ?, price = ?, category = ?, quantity = ?
+		WHERE id = ?`,
+		reqBody.Name, reqBody.Description, reqBody.Price, reqBody.Category, reqBody.Quantity, id,
+	)
+
+	if err != nil {
+		log.Println("Update error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "✅ Product updated successfully"})
+}
+
+
+func DeleteProduct(c *gin.Context) {
+	id := c.Param("id")
+
+	_, err := models.DB.Exec("DELETE FROM products WHERE id = ?", id)
+	if err != nil {
+		log.Println("Delete error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "✅ Product deleted successfully"})
+}
+
+
+
