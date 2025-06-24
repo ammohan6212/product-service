@@ -239,3 +239,36 @@ func GetProductsBySeller(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"products": products})
 }
+// UpdateProductQuantity reduces the quantity of a product after a successful purchase
+func UpdateProductQuantity(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		QuantityPurchased int `json:"quantityPurchased"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil || req.QuantityPurchased <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quantity"})
+		return
+	}
+
+	// Perform the update (subtract purchased quantity)
+	res, err := models.DB.Exec(`
+		UPDATE products 
+		SET quantity = quantity - ? 
+		WHERE id = ? AND quantity >= ?`, req.QuantityPurchased, id, req.QuantityPurchased)
+
+	if err != nil {
+		log.Println("DB update error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update quantity"})
+		return
+	}
+
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Insufficient quantity or product not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Quantity updated successfully"})
+}
+
