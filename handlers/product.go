@@ -242,33 +242,62 @@ func GetProductsBySeller(c *gin.Context) {
 // UpdateProductQuantity reduces the quantity of a product after a successful purchase
 func UpdateProductQuantity(c *gin.Context) {
 	id := c.Param("id")
+	log.Printf("🔍 Update request for product ID: %s", id)
+
 	var req struct {
 		QuantityPurchased int `json:"quantityPurchased"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil || req.QuantityPurchased <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quantity"})
+	// Parse JSON
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("❌ JSON bind error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	// Perform the update (subtract purchased quantity)
+	if req.QuantityPurchased <= 0 {
+		log.Printf("❌ Invalid quantity: %d", req.QuantityPurchased)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Quantity must be positive"})
+		return
+	}
+
+	// Debug logging
+	log.Printf("📦 Reducing quantity of product %s by %d", id, req.QuantityPurchased)
+
+	// Check if product exists and get current quantity
+	var currentQty int
+	err := models.DB.QueryRow("SELECT quantity FROM products WHERE id = ?", id).Scan(&currentQty)
+	if err != nil {
+		log.Printf("❌ Product not found or DB error: %v", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	if currentQty < req.QuantityPurchased {
+		log.Printf("❌ Not enough stock: Available=%d, Requested=%d", currentQty, req.QuantityPurchased)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock"})
+		return
+	}
+
+	// Perform the update
 	res, err := models.DB.Exec(`
 		UPDATE products 
 		SET quantity = quantity - ? 
-		WHERE id = ? AND quantity >= ?`, req.QuantityPurchased, id, req.QuantityPurchased)
+		WHERE id = ?`, req.QuantityPurchased, id)
 
 	if err != nil {
-		log.Println("DB update error:", err)
+		log.Printf("❌ DB update error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update quantity"})
 		return
 	}
 
 	rowsAffected, _ := res.RowsAffected()
+	log.Printf("✅ Rows affected: %d", rowsAffected)
+
 	if rowsAffected == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Insufficient quantity or product not found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No update performed"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Quantity updated successfully"})
 }
-
