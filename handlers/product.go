@@ -329,5 +329,43 @@ func DeleteProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "✅ Product deleted successfully"})
 }
 
+func IncreaseProductQuantity(c *gin.Context) {
+	id := c.Param("id")
+
+	var reqBody struct {
+		Quantity int `json:"quantity"`
+	}
+
+	// Validate JSON input
+	if err := c.ShouldBindJSON(&reqBody); err != nil || reqBody.Quantity <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quantity. It must be a positive integer."})
+		return
+	}
+
+	// Get current quantity
+	var currentQuantity int
+	err := models.DB.QueryRow("SELECT quantity FROM products WHERE id = ?", id).Scan(&currentQuantity)
+	if err != nil {
+		log.Println("Failed to get current product quantity:", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	// Increase quantity
+	newQuantity := currentQuantity + reqBody.Quantity
+
+	_, err = models.DB.Exec("UPDATE products SET quantity = ? WHERE id = ?", newQuantity, id)
+	if err != nil {
+		log.Println("Failed to update product quantity:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to increase product quantity"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "✅ Product quantity increased successfully",
+		"new_quantity": newQuantity,
+	})
+}
+
 
 
