@@ -49,7 +49,7 @@ func main() {
 	r.PATCH("/update-quantity/:id", handlers.UpdateProductQuantity)
 	r.PUT("/update/:id", handlers.UpdateProduct)
 	r.DELETE("/delete/:id", handlers.DeleteProduct)
-	r.PUT("/increase-quantity/:id", handlers.IncreaseProductQuantity)
+	r.PUT("/increase-quantity/", handlers.IncreaseProductQuantity)
 	// Start server
 	if err := r.Run(":8082"); err != nil {
 		log.Fatal("Failed to start server:", err)
