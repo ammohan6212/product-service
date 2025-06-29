@@ -330,7 +330,12 @@ func DeleteProduct(c *gin.Context) {
 }
 
 func IncreaseProductQuantity(c *gin.Context) {
-	id := c.Param("id")
+	imageUrl := c.Query("imageUrl")
+
+	if imageUrl == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "imageUrl query parameter is required"})
+		return
+	}
 
 	var reqBody struct {
 		Quantity int `json:"quantity"`
@@ -344,17 +349,17 @@ func IncreaseProductQuantity(c *gin.Context) {
 
 	// Get current quantity
 	var currentQuantity int
-	err := models.DB.QueryRow("SELECT quantity FROM products WHERE id = ?", id).Scan(&currentQuantity)
+	err := models.DB.QueryRow("SELECT quantity FROM products WHERE image_path = ?", imageUrl).Scan(&currentQuantity)
 	if err != nil {
 		log.Println("Failed to get current product quantity:", err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found with given imageUrl"})
 		return
 	}
 
 	// Increase quantity
 	newQuantity := currentQuantity + reqBody.Quantity
 
-	_, err = models.DB.Exec("UPDATE products SET quantity = ? WHERE id = ?", newQuantity, id)
+	_, err = models.DB.Exec("UPDATE products SET quantity = ? WHERE image_path = ?", newQuantity, imageUrl)
 	if err != nil {
 		log.Println("Failed to update product quantity:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to increase product quantity"})
@@ -366,6 +371,3 @@ func IncreaseProductQuantity(c *gin.Context) {
 		"new_quantity": newQuantity,
 	})
 }
-
-
-
