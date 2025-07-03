@@ -1,109 +1,57 @@
 package main
 
 import (
-	"encoding/csv"
-	"encoding/json"
-	"fmt"
+	"gin-gcs-backend/gcsclient"
+	"gin-gcs-backend/handlers"
+	"gin-gcs-backend/models"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
-
-	"go-backend/db"
-	"go-backend/models"
-	"gorm.io/gorm"
 )
 
-var DB *gorm.DB // Global database connection
-
-func loadCategories(filePath string, dbConn *gorm.DB) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("❌ Failed to open category.csv: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatalf("❌ Failed to read category.csv: %v", err)
-	}
-
-	for _, record := range records[1:] {
-		category := models.Category{
-			Name:     record[0],
-			ImageURL: record[1],
-		}
-		dbConn.Create(&category)
-	}
-
-	fmt.Println("✅ Categories loaded successfully")
-}
-
-func loadProducts(filePath string, dbConn *gorm.DB) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("❌ Failed to open product.csv: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		log.Fatalf("❌ Failed to read product.csv: %v", err)
-	}
-
-	for _, record := range records[1:] {
-		price, _ := strconv.ParseFloat(record[2], 64)
-		stock, _ := strconv.Atoi(record[3])
-		categoryID, _ := strconv.Atoi(record[5])
-
-		product := models.Product{
-			Name:       record[1],
-			Price:      price,
-			Stock:      stock,
-			ImageURL:   record[4],
-			CategoryID: uint(categoryID),
-		}
-		dbConn.Create(&product)
-	}
-
-	fmt.Println("✅ Products loaded successfully")
-}
-
-
-func getCategories(w http.ResponseWriter, r *http.Request) {
-	var categories []models.Category
-	DB.Find(&categories)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(categories)
-}
-
-func getProducts(w http.ResponseWriter, r *http.Request) {
-	var products []models.Product
-	DB.Find(&products)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(products)
-}
-
 func main() {
-	DB = db.Connect() // Assign global DB
+	// Initialize MySQL
+	models.ConnectDatabase()
 
-	DB.AutoMigrate(&models.Category{}, &models.Product{})
-	DB.Exec("DELETE FROM products")
-	DB.Exec("DELETE FROM categories")
-	DB.Exec("ALTER SEQUENCE categories_id_seq RESTART WITH 1") // optional: reset auto-increment
-	DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1") 
-	
+	// Initialize Google Cloud Storage
+	err := gcsclient.ConnectGCS()
+	if err != nil {
+		log.Fatal("Failed to connect to Google Cloud Storage:", err)
+	}
+	defer gcsclient.CloseGCS()
 
-	loadCategories("data/category.csv", DB)
-	loadProducts("data/product.csv", DB)
+	r := gin.Default()
 
-	http.HandleFunc("/categories", getCategories)
-	http.HandleFunc("/products", getProducts)
+	// CORS middleware
+	r.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
 
-	fmt.Println("🚀 Server started at :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"message": "Product service is running",
+		})
+	})
+
+	// Route
+	r.POST("/products", handlers.UploadProduct)
+	r.GET("/get-products", handlers.GetAllProducts)
+	r.GET("/get-product-details/:id", handlers.GetProductByID)
+	r.GET("/seller-products", handlers.GetProductsBySeller)
+	r.PATCH("/update-quantity/:id", handlers.UpdateProductQuantity)
+	r.PUT("/update/:id", handlers.UpdateProduct)
+	r.DELETE("/delete/:id", handlers.DeleteProduct)
+	r.PUT("/increase-quantity", handlers.IncreaseProductQuantity)
+	// Start server
+	if err := r.Run(":8082"); err != nil {
+		log.Fatal("Failed to start server:", err)
+	}
 }
