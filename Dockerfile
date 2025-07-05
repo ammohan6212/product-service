@@ -33,7 +33,7 @@ COPY --from=builder /go/src/go-app/main .
 # Ensure credentials directory exists (even if credentials are mounted later)
 RUN mkdir -p /app/credentials
 
-COPY service-account.json /app/credentials/service-account.json
+#COPY service-account.json /app/credentials/service-account.json
 
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
