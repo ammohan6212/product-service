@@ -80,13 +80,13 @@ pipeline {
                 //         waitForQualityGate abortPipeline: true
                 //     }
                 // }
-                // stage("Mutation Testing and snapshot and component testing at Dev") {
-                //     steps {
-                //         runMutationTests(env.DETECTED_LANG)
-                //         runSnapshotTests(env.DETECTED_LANG)
-                //         runComponentTests(env.DETECTED_LANG)
-                //     }
-                // }
+                stage("Mutation Testing and snapshot and component testing at Dev") {
+                    steps {
+                        runMutationTests(env.DETECTED_LANG)
+                        runSnapshotTests(env.DETECTED_LANG)
+                        runComponentTests(env.DETECTED_LANG)
+                    }
+                }
                 stage("Building the Application") {
                     steps {
                         buildApplication(env.DETECTED_LANG)
