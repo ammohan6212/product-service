@@ -1,13 +1,14 @@
 package main
 
 import (
-	"gin-gcs-backend/gcsclient"
-	"gin-gcs-backend/handlers"
-	"gin-gcs-backend/models"
+	"gin-gcs-backend/src/gcsclient"
+	"gin-gcs-backend/src/handlers"
+	"gin-gcs-backend/src/models"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
+
 
 func main() {
 	// Initialize MySQL

@@ -12,10 +12,10 @@ WORKDIR /go/src/go-app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy all files from src directory
+# Copy all files inside src directory (main.go + subfolders)
 COPY src/ ./src/
 
-# Change working dir to src for build
+# Change working directory to src
 WORKDIR /go/src/go-app/src
 
 # Tidy and build the Go binary
@@ -30,16 +30,16 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /app
 
-# Copy binary from builder stage
+# Copy built binary from builder stage
 COPY --from=builder /go/src/go-app/src/main .
 
 # Ensure credentials directory exists (even if mounted at runtime)
 RUN mkdir -p /app/credentials
 
-# Do NOT copy service-account.json into image
+# Do NOT copy service-account.json into the image
 # COPY service-account.json /app/credentials/service-account.json
 
-# Set env var (file will be mounted at runtime)
+# Set env var for service account key to be mounted later
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
 EXPOSE 8080
