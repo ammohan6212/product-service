@@ -12,8 +12,11 @@ WORKDIR /go/src/go-app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the application source code
-COPY . .
+# Copy all files from src directory
+COPY src/ ./src/
+
+# Change working dir to src for build
+WORKDIR /go/src/go-app/src
 
 # Tidy and build the Go binary
 RUN go mod tidy && \
@@ -25,22 +28,20 @@ FROM alpine:latest
 # Install CA certificates (required for HTTPS)
 RUN apk --no-cache add ca-certificates
 
-# Set working directory inside the container
 WORKDIR /app
 
 # Copy binary from builder stage
-COPY --from=builder /go/src/go-app/main .
-# Ensure credentials directory exists (even if credentials are mounted later)
+COPY --from=builder /go/src/go-app/src/main .
+
+# Ensure credentials directory exists (even if mounted at runtime)
 RUN mkdir -p /app/credentials
 
-#COPY service-account.json /app/credentials/service-account.json
+# Do NOT copy service-account.json into image
+# COPY service-account.json /app/credentials/service-account.json
 
+# Set env var (file will be mounted at runtime)
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
-
-
-# Expose the application port
 EXPOSE 8080
 
-# Start the Go app
 CMD ["./main"]
