@@ -6,13 +6,13 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GO111MODULE=on
 
-# Set working directory inside builder container
+# Working directory inside builder container
 WORKDIR /go/src/go-app
 
 # Copy go.mod and go.sum first for caching
 COPY go.mod go.sum ./
 
-# Download Go modules
+# Download dependencies
 RUN go mod download
 
 # Copy application source code inside src directory
@@ -26,10 +26,12 @@ RUN go mod tidy && \
     go build -o main .
 
 # -------- Stage 2: Final Runtime Image --------
-FROM alpine:latest
+FROM alpine:3.20
 
-# Install CA certificates (for HTTPS calls)
-RUN apk --no-cache add ca-certificates
+# Update & upgrade base packages, then install ca-certificates and openssl
+RUN apk --no-cache update && \
+    apk --no-cache upgrade && \
+    apk --no-cache add ca-certificates openssl
 
 # Create application work directory
 WORKDIR /app
