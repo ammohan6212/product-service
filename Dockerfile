@@ -1,5 +1,5 @@
 # -------- Stage 1: Build Go Binary --------
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Set Go build environment
 ENV CGO_ENABLED=0 \
