@@ -1,49 +1,50 @@
 # -------- Stage 1: Build Go Binary --------
 FROM golang:1.21-alpine AS builder
 
+# Set Go build environment
 ENV CGO_ENABLED=0 \
     GOOS=linux \
     GO111MODULE=on
 
-# Create base working directory
+# Set working directory inside builder container
 WORKDIR /go/src/go-app
 
-# Copy go.mod and go.sum first
+# Copy go.mod and go.sum first for caching
 COPY go.mod go.sum ./
 
-# Download modules
+# Download Go modules
 RUN go mod download
 
-# Copy full source code
+# Copy application source code inside src directory
 COPY src/ ./src/
 
-# Move go.mod into src/ to match code if needed
-# (Optional: only needed if your code expects go.mod inside src)
-RUN cp go.mod go.sum ./src/
-
-# Change working directory to src
+# Change working directory to src where main.go is
 WORKDIR /go/src/go-app/src
 
-# Tidy and build
+# Tidy modules and build binary
 RUN go mod tidy && \
     go build -o main .
 
 # -------- Stage 2: Final Runtime Image --------
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates && \
-    apk --no-cache upgrade
+# Install CA certificates (for HTTPS calls)
+RUN apk --no-cache add ca-certificates
 
+# Create application work directory
 WORKDIR /app
 
-# Copy built binary from builder
+# Copy compiled Go binary from builder stage
 COPY --from=builder /go/src/go-app/src/main .
 
-# Prepare credentials directory (empty)
+# Create credentials directory (empty, to be mounted at runtime)
 RUN mkdir -p /app/credentials
 
+# Set GCP credentials environment variable (path inside container)
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
+# Expose port used by the Go application
 EXPOSE 8080
 
+# Run the binary
 CMD ["./main"]
