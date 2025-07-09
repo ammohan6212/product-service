@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"gin-gcs-backend/gcsclient"
-	"gin-gcs-backend/models"
+	"gin-gcs-backend/src/gcsclient"
+	"gin-gcs-backend/src/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
