@@ -538,11 +538,11 @@ pipeline {
                         }
                     }
                 }
-                stage("Install Dependencies and dependency scanning and type checking and unit tests and code coverage calcualtion ") {
-                    steps {
-                        installAppDependencies(env.DETECTED_LANG)
-                        performDependencyScan(env.DETECTED_LANG)
-                        runTypeChecks(env.DETECTED_LANG)
+                stage("install the dependencies first"){
+                    steps{
+                        script{
+                            installAppDependencies(env.DETECTED_LANG)
+                        }
                     }
                 }
                 stage("Linting (App Code, Terraform, Kubernetes, Docker)") {
@@ -553,18 +553,19 @@ pipeline {
                         // validateDockerImage('Dockerfile')
                     }
                 }
-                stage("perform the unittest and code coverage "){
-                    steps{
-                        runUnitTests(env.DETECTED_LANG)
-                        calculateCodeCoverage(env.DETECTED_LANG)
-                    }
-                }
                 // stage("Secrets Detection") {
-                     
                 //     steps {
                 //         performSecretsDetection('.') // Scan the entire workspace
                 //     }
                 // }
+                stage("Install Dependencies and dependency scanning and type checking and unit tests and code coverage calcualtion ") {
+                    steps {
+                        // performDependencyScan(env.DETECTED_LANG)
+                        runTypeChecks(env.DETECTED_LANG)
+                        runUnitTests(env.DETECTED_LANG)
+                        calculateCodeCoverage(env.DETECTED_LANG)
+                    }
+                }
                 // stage("perform sonarqube scans"){
                 //     steps{     
                 //         echo "sonarqube test happens here" 
