@@ -1,46 +1,52 @@
 # -------- Stage 1: Build Go Binary --------
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Set Go build environment
 ENV CGO_ENABLED=0 \
     GOOS=linux \
     GO111MODULE=on
 
+# Working directory inside builder container
 WORKDIR /go/src/go-app
 
-# Copy go.mod and go.sum first for better caching
+# Copy go.mod and go.sum first for caching
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
-# Copy the rest of the application source code
-COPY . .
+# Copy application source code inside src directory
+COPY src/ ./src/
 
-# Tidy and build the Go binary
+# Change working directory to src where main.go is
+WORKDIR /go/src/go-app/src
+
+# Tidy modules and build binary
 RUN go mod tidy && \
     go build -o main .
 
 # -------- Stage 2: Final Runtime Image --------
-FROM alpine:latest
+FROM alpine:3.20
 
-# Install CA certificates (required for HTTPS)
-RUN apk --no-cache add ca-certificates
+# Update & upgrade base packages, then install ca-certificates and openssl
+RUN apk --no-cache update && \
+    apk --no-cache upgrade && \
+    apk --no-cache add ca-certificates openssl
 
-# Set working directory inside the container
+# Create application work directory
 WORKDIR /app
 
-# Copy binary from builder stage
-COPY --from=builder /go/src/go-app/main .
-# Ensure credentials directory exists (even if credentials are mounted later)
+# Copy compiled Go binary from builder stage
+COPY --from=builder /go/src/go-app/src/main .
+
+# Create credentials directory (empty, to be mounted at runtime)
 RUN mkdir -p /app/credentials
 
-COPY service-account.json /app/credentials/service-account.json
-
+# Set GCP credentials environment variable (path inside container)
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
 
-
-
-# Expose the application port
+# Expose port used by the Go application
 EXPOSE 8080
 
-# Start the Go app
+# Run the binary
 CMD ["./main"]
