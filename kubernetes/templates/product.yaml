@@ -30,6 +30,16 @@ spec:
               value: Amohan9676$
             - name: DB_NAME
               value: mydb
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /app/credentials/service-account.json
+          volumeMounts:
+            - name: gcp-sa-volume
+              mountPath: /app/credentials
+              readOnly: true
+      volumes:
+        - name: gcp-sa-volume
+          secret:
+            secretName: gcp-sa-key
 ---
 apiVersion: v1
 kind: Service

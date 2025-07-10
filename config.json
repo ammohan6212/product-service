@@ -6,7 +6,7 @@
     "docker_cred_username":"user1",
     "docker_cred_password":"docker-password",
     "docker_credentials": "docker-id",
-    "kubernetes_endpoint": "https://mohan-cluster2-dns-em2649zu.hcp.canadacentral.azmk8s.io",
+    "kubernetes_endpoint": "https://056A55D07D0DA0FDE73AAB03A1BAF437.gr7.us-east-1.eks.amazonaws.com",
     "bucket_name": "micro-service",
     "kubernetesClusterName": "example-cluster",
     "kubernetesCredentialsId": "k8s-credentials-id",
