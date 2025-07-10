@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product
+  namespace: {{ .Values.product.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+        - name: product
+          image: {{ .Values.product.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: mohan
+            - name: DB_PASSWORD
+              value: Amohan9676$
+            - name: DB_NAME
+              value: mydb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product
+  namespace: {{ .Values.product.namespace }}
+spec:
+  selector:
+    app: product
+  ports:
+    - port: 8082
+      targetPort: 8082
