@@ -98,14 +98,10 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: latest  # or pin to specific version like v1.57.2
-          args: run ./...
-
-
-
-      - name: Run application linter
-        run: golangci-lint run ./...
-        continue-on-error: true
+          version: latest
+          args: ./...             # ✅ This is correct — do NOT put 'run ./...'
+          install-mode: binary
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run hadolint
         uses: hadolint/hadolint-action@master
